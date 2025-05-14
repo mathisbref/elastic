@@ -1,8 +1,17 @@
+import { init as initApm } from '@elastic/apm-rum';
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+
+// const apm = initApm({
+//   serviceName: 'elastic-top-queries',
+//   serverUrl: 'https://your-apm-server-url',
+//   environment: 'production',
+// });
+
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
