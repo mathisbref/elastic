@@ -1,15 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import './TopQueries.css';
 
 const TopQueries = () => {
   const [queries, setQueries] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [pageSize, setPageSize] = useState(40); // Nombre de top queries à afficher
+  const [pageSize, setPageSize] = useState(40);
   const [dateRange, setDateRange] = useState({
-    from: '2023-01-01T00:00:00Z', // Date de début par défaut
-    to: '2025-12-31T23:59:59Z',   // Date de fin par défaut
+    from: new Date('2025-01-01T00:00:00Z'),
+    to: new Date('2025-12-31T23:59:59Z'),
   });
 
-  const fetchTopQueries = async () => {
+  const fetchTopQueries = useCallback(async () => {
     try {
       setLoading(true);
       const baseUrl = process.env.REACT_APP_ELASTIC_SEARCH_BASE_URL;
@@ -31,12 +34,12 @@ const TopQueries = () => {
           body: JSON.stringify({
             filters: {
               date: {
-                from: dateRange.from, // Utilise la plage de dates sélectionnée
-                to: dateRange.to,
+                from: dateRange.from.toISOString(),
+                to: dateRange.to.toISOString(),
               },
             },
             page: {
-              size: pageSize, // Utilise le nombre de résultats sélectionné
+              size: pageSize,
             },
           }),
         }
@@ -53,20 +56,11 @@ const TopQueries = () => {
       console.error('Erreur lors de la récupération des top queries:', error);
       setLoading(false);
     }
-  };
+  }, [dateRange, pageSize]);
 
-  // Appel initial pour charger les données par défaut
   useEffect(() => {
     fetchTopQueries();
-  }, []);
-
-  const handleDateChange = (e) => {
-    const { name, value } = e.target;
-    setDateRange((prev) => ({
-      ...prev,
-      [name]: `${value}:00Z`,
-    }));
-  };
+  }, [fetchTopQueries]);   // permet d'appeler la fonction fetchTopQueries lors du premier rendu
 
   const handlePageSizeChange = (e) => {
     setPageSize(Number(e.target.value));
@@ -80,32 +74,34 @@ const TopQueries = () => {
     return <p>Chargement des données...</p>;
   }
 
-  if (queries.length === 0) {
-    return <p>Aucune donnée disponible pour les top queries.</p>;
-  }
-
   return (
     <div>
       <h1>Top Queries</h1>
 
-      {/* Contrôles pour la plage de dates et le nombre de résultats */}
+      {/* Bandeau de recherche */}
       <div style={{ marginBottom: '20px' }}>
         <label>
           Date de début :
-          <input
-            type="datetime-local"
-            name="from"
-            value={dateRange.from.slice(0, 16)} // Format pour datetime-local
-            onChange={handleDateChange}
+          <DatePicker
+            selected={dateRange.from}
+            onChange={(date) => setDateRange((prev) => ({ ...prev, from: date }))}
+            dateFormat="yyyy-MM-dd"
+            showYearDropdown
+            showMonthDropdown
+            dropdownMode="select"
+            portalId="root-portal"
           />
         </label>
         <label>
           Date de fin :
-          <input
-            type="datetime-local"
-            name="to"
-            value={dateRange.to.slice(0, 16)} // Format pour datetime-local
-            onChange={handleDateChange}
+          <DatePicker
+            selected={dateRange.to}
+            onChange={(date) => setDateRange((prev) => ({ ...prev, to: date }))}
+            dateFormat="yyyy-MM-dd"
+            showYearDropdown
+            showMonthDropdown
+            dropdownMode="select"
+            portalId="root-portal"
           />
         </label>
         <label>
@@ -122,20 +118,26 @@ const TopQueries = () => {
       </div>
 
       {/* Tableau des résultats */}
-      <table>
+      <table style={{ borderCollapse: 'collapse', width: '100%' }}>
         <thead>
-          <tr>
-            <th>Requête</th>
-            <th>Nombre de Requêtes</th>
+          <tr style={{ backgroundColor: '#f4f4f4', textAlign: 'left' }}>
+            <th style={{ border: '1px solid #ddd', padding: '8px' }}>Requête</th>
+            <th style={{ border: '1px solid #ddd', padding: '8px' }}>Nombre de Requêtes</th>
           </tr>
         </thead>
         <tbody>
-          {queries.map((query, index) => (
-            <tr key={index}>
-              <td>{query.term}</td>
-              <td>{query.queries}</td>
+          {queries.length === 0 ? (
+            <tr>
+              <td colSpan="2" style={{ textAlign: 'center' }}>Aucune donnée disponible pour les top queries.</td>
             </tr>
-          ))}
+          ) : (
+            queries.map((query, index) => (
+              <tr key={index}>
+                <td>{query.term}</td>
+                <td>{query.queries}</td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </div>

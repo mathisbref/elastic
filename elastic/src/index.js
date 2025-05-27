@@ -1,4 +1,4 @@
-import { init as initApm } from '@elastic/apm-rum';
+// import { init as initApm } from '@elastic/apm-rum';
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
