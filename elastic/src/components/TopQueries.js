@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './TopQueries.css';
+import TopQueriesNoClicks from './TopQueriesNoClicks'; // Import du nouveau composant
 
 const TopQueries = () => {
   const [queries, setQueries] = useState([]);
@@ -11,6 +12,7 @@ const TopQueries = () => {
     from: new Date('2025-01-01T00:00:00Z'),
     to: new Date('2025-12-31T23:59:59Z'),
   });
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
 
   const fetchTopQueries = useCallback(async () => {
     try {
@@ -52,22 +54,27 @@ const TopQueries = () => {
         console.error('Erreur API:', data);
       }
       setLoading(false);
+      setIsFirstLoad(false);
     } catch (error) {
       console.error('Erreur lors de la récupération des top queries:', error);
       setLoading(false);
+      setIsFirstLoad(false);
     }
   }, [dateRange, pageSize]);
 
   useEffect(() => {
-    fetchTopQueries();
-  }, [fetchTopQueries]);   // permet d'appeler la fonction fetchTopQueries lors du premier rendu
+    if (isFirstLoad) {
+      fetchTopQueries();
+    }
+  }, [fetchTopQueries, isFirstLoad]);
 
   const handlePageSizeChange = (e) => {
     setPageSize(Number(e.target.value));
   };
 
-  const handleSearch = () => {
-    fetchTopQueries(); // Recharge les données avec les nouveaux paramètres
+  const handleSearch = (e) => {
+    e.preventDefault();
+    fetchTopQueries();
   };
 
   if (loading) {
@@ -79,7 +86,7 @@ const TopQueries = () => {
       <h1>Top Queries</h1>
 
       {/* Bandeau de recherche */}
-      <div style={{ marginBottom: '20px' }}>
+      <form onSubmit={handleSearch} style={{ marginBottom: '20px' }}>
         <label>
           Date de début :
           <DatePicker
@@ -114,10 +121,11 @@ const TopQueries = () => {
             max="100"
           />
         </label>
-        <button onClick={handleSearch}>Rechercher</button>
-      </div>
+        <button type="submit">Rechercher</button>
+      </form>
 
       {/* Tableau des résultats */}
+      <h2>Top Queries avec Résultats</h2>
       <table style={{ borderCollapse: 'collapse', width: '100%' }}>
         <thead>
           <tr style={{ backgroundColor: '#f4f4f4', textAlign: 'left' }}>
@@ -140,6 +148,9 @@ const TopQueries = () => {
           )}
         </tbody>
       </table>
+
+      {/* Affichage du composant TopQueriesNoClicks */}
+      <TopQueriesNoClicks dateRange={dateRange} pageSize={pageSize} />
     </div>
   );
 };
