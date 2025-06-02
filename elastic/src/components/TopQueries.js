@@ -118,7 +118,7 @@ const TopQueries = () => {
             value={pageSize}
             onChange={handlePageSizeChange}
             min="1"
-            max="100"
+            max="999"
           />
         </label>
         <button type="submit">Rechercher</button>
